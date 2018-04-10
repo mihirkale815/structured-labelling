@@ -1,0 +1,6 @@
+ python cli.py --data_file /volume1/data-structured/conll-2003/all.pkl -rnn_cell lstm --batch_size 16 --dim_str 50 --dim_sem 75 --dim_output 26 --keep_prob 0.5 --opt Adagrad --lr 0.05 --norm 1e-4 --gpu 0 --sent_attention max --doc_attention max --log_period 1000
+
+ python cli.py --data_file /volume1/data-structured/conll-2003/all.pkl -rnn_cell lstm --batch_size 16 --dim_str 0 --dim_sem 100  --keep_prob 0.5 --opt Adam --lr 0.001 --norm 1e-4 --gpu 0 --log_period 1000
+
+
+ python cli.py --data_file /volume1/data-structured/mit-movie-1/all.pkl -rnn_cell lstm --batch_size 16 --dim_str 50 --dim_sem 75 --dim_output 26 --keep_prob 0.5 --opt Adagrad --lr 0.05 --norm 1e-4 --gpu 0  --log_period 1000 --epochs 30

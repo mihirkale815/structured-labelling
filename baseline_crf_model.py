@@ -5,7 +5,7 @@ import numpy as np
 
 
 
-class BilstmSoftmax():
+class BilstmCRF():
     def __init__(self, config):
         self.config = config
         t_variables = {}
@@ -112,6 +112,7 @@ class BilstmSoftmax():
 
 
     def get_loss(self):
+
         if (self.config.opt == 'Adam'):
             optimizer = tf.train.AdamOptimizer(self.config.lr)
         elif (self.config.opt == 'Adagrad'):
@@ -121,19 +122,31 @@ class BilstmSoftmax():
         elif (self.config.opt == 'Momentum'):
             optimizer = tf.train.MomentumOptimizer(self.config.lr,self.config.momentum)
 
-        with tf.variable_scope("Model"):
-            self.loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.final_output,
-                                                                  labels=self.t_variables['gold_labels'])
 
-            mask = tf.sequence_mask(self.t_variables['sent_l'])
+        with tf.variable_scope("Model"):
+            #self.transition_params = tf.placeholder(tf.float32, shape=(self.config.dim_output,self.config.dim_output),name='transition_params')
+
+            self.trans_outputs = self.final_output  # tf.transpose(self.outputs, perm=[1, 0, 2], name='trans_outputs')
+            log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(self.trans_outputs, self.t_variables['gold_labels'],
+                                                                  self.t_variables['sent_l'])
+            self.transition_params = transition_params
+            self.loss = tf.reduce_mean(-log_likelihood)
+
+            #gvs = optimizer.compute_gradients(self.cross_entropy)
+            #capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in gvs if var.name.find(NAMESPACE) != -1]
+            #self.train_step = optimizer.apply_gradients(gvs)
+
+            #mask = tf.sequence_mask(self.t_variables['sent_l'])
             # apply mask
-            self.loss = tf.boolean_mask(self.loss, mask)
-            self.loss = tf.reduce_mean(self.loss)
-            model_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Model')
-            str_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Structure')
-            for p in model_params + str_params:
-                if ('bias' not in p.name):
-                    self.loss += self.config.norm * tf.nn.l2_loss(p)
+            #self.loss = tf.boolean_mask(self.loss, mask)
+            #self.loss = tf.reduce_mean(self.loss)
+            #model_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Model')
+            #str_params = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'Structure')
+            #for p in model_params + str_params:
+            #    if ('bias' not in p.name):
+            #        self.loss += self.config.norm * tf.nn.l2_loss(p)
+
+
             self.opt = optimizer.minimize(self.loss)
 
 

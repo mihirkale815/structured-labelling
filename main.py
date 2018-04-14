@@ -4,7 +4,9 @@ import numpy as np
 import pickle
 import logging
 from models import  StructureModel
+from model_crf import  StructureModelCRF
 from baseline_model import BilstmSoftmax
+from baseline_crf_model import BilstmCRF
 import tqdm
 
 def load_data(config):
@@ -25,7 +27,7 @@ def evaluate(sess, model, test_batches,path,id2tag):
     f = open(path, "w")
     corr_count, all_count = 0, 0
     for ct, batch in test_batches:
-        feed_dict = model.get_feed_dict(batch)
+        feed_dict = model.get_feed_dict(batch,id2tag)
         feed_dict[model.t_variables['keep_prob']] = 1
         predictions = sess.run(model.final_output, feed_dict=feed_dict)
         predictions = np.argmax(predictions, 2)
@@ -42,6 +44,43 @@ def evaluate(sess, model, test_batches,path,id2tag):
     acc_test = 1.0 * corr_count / all_count
     f.close()
     return  acc_test
+
+def evaluate_crf(sess, model, test_batches,path,id2tag):
+    f = open(path, "w")
+    corr_count, all_count = 0, 0
+    for ct, batch in test_batches:
+        feed_dict = model.get_feed_dict(batch,id2tag)
+        feed_dict[model.t_variables['keep_prob']] = 1
+        predictions,transition_params = sess.run([model.final_output,model.transition_params], feed_dict=feed_dict)
+        #predictions = np.argmax(predictions, 2)
+        #print(predictions)
+        viterbi_sequences = []
+        for i in range(predictions.shape[0]):
+            logit, sequence_length  = predictions[i], feed_dict[model.t_variables['sent_l']][i]
+            #print(model.t_variables['sent_l'])
+
+            logit = logit[:sequence_length]  # keep only the valid steps
+            viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(
+                logit, transition_params)
+            viterbi_sequences += [viterbi_seq]
+
+        #corr_count += np.sum(predictions == feed_dict[model.t_variables['gold_labels']])
+        #all_count += len(batch)
+        for sentence in range(len(batch)):
+            for token_idx in range(len(viterbi_sequences[sentence])):
+                #print(viterbi_sequences[sentence][token_idx],id2tag)
+                pred_label = id2tag[viterbi_sequences[sentence][token_idx]].upper()
+                actual_label = id2tag[feed_dict[model.t_variables['gold_labels']][sentence,token_idx]].upper()
+                if actual_label.lower() == 'pad' : continue
+                f.write( " ".join(["-1","-1","-1",actual_label,pred_label]))
+                f.write("\n")
+            f.write("\n")
+    #acc_test = 1.0 * corr_count / all_count
+    acc_test = 0
+    f.close()
+    return  acc_test
+
+
 
 def run(config):
     import random
@@ -69,6 +108,9 @@ def run(config):
 
     if config.arch == 'sa' :model = StructureModel(config)
     elif config.arch == 'bs': model = BilstmSoftmax(config)
+    elif config.arch == 'bs-crf': model = BilstmCRF(config)
+    elif config.arch == 'sa-crf': model = StructureModelCRF(config)
+
     model.build()
     model.get_loss()
     # trainer = Trainer(config)
@@ -84,12 +126,16 @@ def run(config):
         loss = 0
 
         for ct, batch in tqdm.tqdm(train_batches, total=num_steps):
-            feed_dict = model.get_feed_dict(batch)
+            feed_dict = model.get_feed_dict(batch,id2tag)
             outputs,_,_loss = sess.run([model.final_output, model.opt, model.loss], feed_dict=feed_dict)
             loss+=_loss
             if(ct%config.log_period==0):
-                acc_test = evaluate(sess, model, test_batches,config.test_output,id2tag)
-                acc_dev = evaluate(sess, model, dev_batches,config.dev_output,id2tag)
+                if config.arch in  ['bs-crf','sa-crf']:
+                    acc_test = evaluate_crf(sess, model, test_batches, config.test_output, id2tag)
+                    acc_dev = evaluate_crf(sess, model, dev_batches, config.dev_output, id2tag)
+                else:
+                    acc_test = evaluate(sess, model, test_batches,config.test_output,id2tag)
+                    acc_dev = evaluate(sess, model, dev_batches,config.dev_output,id2tag)
                 print('Step: {} Loss: {}\n'.format(ct, loss))
                 print('Test ACC: {}\n'.format(acc_test))
                 print('Dev  ACC: {}\n'.format(acc_dev))

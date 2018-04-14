@@ -252,9 +252,12 @@ class Corpus:
                     token_idxs.append(self.vocab['UNK'])
 
             instance.token_idxs = token_idxs
-            instance.goldLabel = [self.tag2id.get(tag,'o') for tag in sen.goldRating]
+            instance.goldLabel = [self.tag2id.get(tag,0) for tag in sen.goldRating]
+            include = True
             for tag  in sen.goldRating:
-                if tag not in self.tag2id : print("tag",tag,"not found in tag vocab!!")
-            instancelst.append(instance)
+                if tag not in self.tag2id :
+                    print("tag",tag,"not found in tag vocab!!")
+                    include = False
+            if include : instancelst.append(instance)
         print('n_filtered in {}: {}'.format(name, n_filtered))
         return instancelst

@@ -1,0 +1,111 @@
+2	B-Rating
+start	I-Rating
+restaurants	O
+with	O
+inside	B-Amenity
+dining	I-Amenity
+
+34	O
+
+5	B-Rating
+star	I-Rating
+resturants	O
+in	B-Location
+my	I-Location
+town	I-Location
+
+98	O
+hong	B-Restaurant_Name
+kong	I-Restaurant_Name
+restaurant	O
+reasonable	B-Price
+prices	O
+
+a	O
+great	O
+lunch	O
+spot	O
+but	O
+open	B-Hours
+till	I-Hours
+2	I-Hours
+a	I-Hours
+m	I-Hours
+passims	B-Restaurant_Name
+kitchen	I-Restaurant_Name
+
+a	O
+place	O
+that	O
+serves	O
+soft	B-Dish
+serve	I-Dish
+ice	I-Dish
+cream	I-Dish
+
+a	O
+restaurant	O
+that	O
+is	O
+good	B-Rating
+for	B-Amenity
+groups	I-Amenity
+
+a	O
+salad	B-Dish
+would	O
+make	O
+my	O
+day	O
+
+a	O
+smoothie	B-Cuisine
+would	O
+hit	O
+the	O
+spot	O
+
+a	O
+steak	B-Dish
+would	O
+be	O
+nice	O
+
+a	O
+sub	B-Dish
+place	O
+near	B-Location
+independence	I-Location
+boulevard	I-Location
+
+about	O
+how	O
+much	O
+is	O
+a	O
+midpriced	B-Price
+bottle	B-Rating
+of	O
+good	B-Rating
+wine	B-Cuisine
+at	O
+davidos	B-Restaurant_Name
+italian	I-Restaurant_Name
+palace	I-Restaurant_Name
+
+about	O
+how	O
+much	O
+will	O
+it	O
+cost	B-Price
+to	O
+eat	O
+at	O
+johns	B-Restaurant_Name
+pizza	I-Restaurant_Name
+cafe	I-Restaurant_Name
+for	O
+dinner	B-Hours
+per	B-Price
+person	I-Price
